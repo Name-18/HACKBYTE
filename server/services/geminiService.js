@@ -1,32 +1,43 @@
 // geminiService.js - Gemini API integration for AI analysis
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 
 class GeminiService {
   constructor() {
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      console.warn('⚠️ GEMINI_API_KEY not found in environment')
+      console.warn('⚠️  [Gemini] GEMINI_API_KEY not found in environment')
+    } else {
+      console.log('✅ [Gemini] API key loaded:', apiKey.slice(0, 6) + '...' + apiKey.slice(-4))
     }
-    this.client = new GoogleGenerativeAI(apiKey)
+    this.client = new GoogleGenAI({ apiKey })
   }
 
   async analyzeCandidate(data) {
     try {
       const { resume, github } = data
-
       const prompt = this.generateAnalysisPrompt(resume, github)
 
-      const model = this.client.getGenerativeModel({
-        model: 'gemini-pro',
+      console.log('📤 [Gemini] Sending request to gemini-2.5-flash...')
+      console.log('📋 [Gemini] Prompt preview:', prompt.slice(0, 200).trim(), '...')
+
+      const response = await this.client.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
       })
 
-      const result = await model.generateContent(prompt)
-      const responseText = result.response.text()
+      console.log('📥 [Gemini] Raw response received')
+      console.log('📝 [Gemini] Response text preview:', response.text?.slice(0, 300))
 
-      return this.parseAnalysisResponse(responseText, resume, github)
+      const parsed = this.parseAnalysisResponse(response.text, resume, github)
+      console.log('✅ [Gemini] Parsed analysis:', JSON.stringify(parsed, null, 2))
+
+      return parsed
     } catch (error) {
-      console.error('❌ Gemini API error:', error)
-      // Return default analysis if API fails
+      console.error('❌ [Gemini] API call failed!')
+      console.error('   Status :', error.status ?? 'N/A')
+      console.error('   Message:', error.message)
+      console.error('   Stack  :', error.stack)
+      console.warn('⚠️  [Gemini] Falling back to heuristic analysis')
       return this.getDefaultAnalysis(data)
     }
   }
@@ -71,27 +82,24 @@ Provide your analysis in JSON format with these fields:
 
   parseAnalysisResponse(responseText, resume, github) {
     try {
-      // Try to extract JSON from the response
+      console.log('🔍 [Gemini] Attempting JSON parse from response...')
       const jsonMatch = responseText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
+        console.log('✅ [Gemini] JSON parsed successfully')
+        console.log('   skillsConsistency    :', parsed.skillsConsistency)
+        console.log('   projectsConsistency  :', parsed.projectsConsistency)
+        console.log('   experienceConsistency:', parsed.experienceConsistency)
+        console.log('   suspicionFlags       :', parsed.suspicionFlags)
+        console.log('   overallAssessment    :', parsed.overallAssessment)
         return parsed
       }
 
-      // Fallback parsing
+      console.warn('⚠️  [Gemini] No JSON block found in response, using fallback text parser')
       return {
-        skillsConsistency: this.detectConsistency(
-          responseText,
-          'skills',
-        ),
-        projectsConsistency: this.detectConsistency(
-          responseText,
-          'project',
-        ),
-        experienceConsistency: this.detectConsistency(
-          responseText,
-          'experience',
-        ),
+        skillsConsistency: this.detectConsistency(responseText, 'skills'),
+        projectsConsistency: this.detectConsistency(responseText, 'project'),
+        experienceConsistency: this.detectConsistency(responseText, 'experience'),
         suspicionFlags: this.extractFlags(responseText),
         reasoning: responseText.substring(0, 500),
         overallAssessment: responseText.toLowerCase().includes('genuine')
@@ -99,7 +107,8 @@ Provide your analysis in JSON format with these fields:
           : 'questionable',
       }
     } catch (error) {
-      console.error('Error parsing Gemini response:', error)
+      console.error('❌ [Gemini] Failed to parse response JSON:', error.message)
+      console.warn('⚠️  [Gemini] Using heuristic fallback after parse failure')
       return this.getDefaultAnalysis({ resume, github })
     }
   }
@@ -124,36 +133,26 @@ Provide your analysis in JSON format with these fields:
   extractFlags(text) {
     const flags = []
     const badKeywords = [
-      'exaggerat',
-      'fabricat',
-      'inconsisten',
-      'red flag',
-      'mislead',
-      'dishonest',
-      'falsif',
-      'gap',
-      'inactivit',
+      'exaggerat', 'fabricat', 'inconsisten', 'red flag',
+      'mislead', 'dishonest', 'falsif', 'gap', 'inactivit',
     ]
-
     badKeywords.forEach((keyword) => {
       if (text.toLowerCase().includes(keyword)) {
         flags.push(`Detected: ${keyword}`)
       }
     })
-
     return flags
   }
 
   getDefaultAnalysis(data) {
+    console.log('🔄 [Gemini] Running heuristic (offline) analysis...')
     const { resume, github } = data
 
-    // Create a simple heuristic analysis
     let skillsConsistency = 'medium'
     let projectsConsistency = 'medium'
     let experienceConsistency = 'medium'
     const flags = []
 
-    // Check for skill verification
     if (github.languages && github.languages.length > 0) {
       const verifiedSkills = (resume.skills || []).filter((skill) =>
         github.languages.some((lang) =>
@@ -168,7 +167,6 @@ Provide your analysis in JSON format with these fields:
       skillsConsistency = 'low'
     }
 
-    // Check for project evidence
     if (github.publicRepos && github.publicRepos > 0) {
       projectsConsistency = github.publicRepos >= 5 ? 'high' : 'medium'
     } else if (resume.projects && resume.projects.length > 0) {
@@ -178,7 +176,6 @@ Provide your analysis in JSON format with these fields:
       projectsConsistency = 'low'
     }
 
-    // Check for activity
     if (github.contributions && github.contributions < 10) {
       flags.push('Low GitHub activity')
       experienceConsistency = 'low'
@@ -187,13 +184,12 @@ Provide your analysis in JSON format with these fields:
       experienceConsistency = 'medium'
     }
 
-    return {
+    const result = {
       skillsConsistency,
       projectsConsistency,
       experienceConsistency,
       suspicionFlags: flags,
-      reasoning:
-        'Analysis based on GitHub profile verification and resume claims.',
+      reasoning: 'Analysis based on GitHub profile verification and resume claims.',
       overallAssessment:
         flags.length > 2
           ? 'questionable'
@@ -201,6 +197,9 @@ Provide your analysis in JSON format with these fields:
             ? 'genuine'
             : 'questionable',
     }
+
+    console.log('✅ [Gemini] Heuristic result:', JSON.stringify(result, null, 2))
+    return result
   }
 }
 

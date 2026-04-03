@@ -1,0 +1,10 @@
+John Doe
+john@example.com
++91 9876543210
+linkedin.com/in/johndoe
+
+Skills
+JavaScript, React, Node.js
+
+Experience
+Built web apps.

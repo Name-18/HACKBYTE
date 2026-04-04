@@ -12,7 +12,7 @@ const api = axios.create({
 
 export const trustAPI = {
   // Upload and analyze resume
-  uploadAndAnalyze: async (resumeFile, githubUsername) => {
+  uploadAndAnalyze: async (resumeFile, githubUsername, selectedSkills = []) => {
     try {
       const formData = new FormData()
       formData.append('resume', resumeFile)
@@ -34,6 +34,7 @@ export const trustAPI = {
       const analysisRes = await api.post('/trust/analyze', {
         resumeText,
         githubUsername,
+        selectedSkills,
       })
 
       return analysisRes.data.data
@@ -78,12 +79,24 @@ export const trustAPI = {
     }
   },
 
+  // Get available skills
+  getAvailableSkills: async () => {
+    try {
+      const res = await api.get('/trust/available-skills')
+      return res.data.data
+    } catch (error) {
+      console.error('Fetch skills error:', error)
+      throw error
+    }
+  },
+
   // Direct analyze with resume text
-  analyze: async (resumeText, githubUsername) => {
+  analyze: async (resumeText, githubUsername, selectedSkills = []) => {
     try {
       const res = await api.post('/trust/analyze', {
         resumeText,
         githubUsername,
+        selectedSkills,
       })
       return res.data.data
     } catch (error) {

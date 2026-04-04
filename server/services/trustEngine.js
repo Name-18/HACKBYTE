@@ -1,6 +1,7 @@
 // trustEngine.js - Core TrustScore calculation engine
 import { geminiService } from './geminiService.js'
 import { githubService } from './githubService.js'
+import { getDefaultSkills } from '../config/skillsConfig.js'
 
 export class TrustEngine {
   constructor() {
@@ -11,12 +12,22 @@ export class TrustEngine {
     }
   }
 
-  async analyzeCandidateProfile(resumeData, githubUsername) {
+  async analyzeCandidateProfile(resumeData, githubUsername, selectedSkills = []) {
     try {
       console.log('🔍 Starting TrustScore analysis...')
+      console.log('   Received selectedSkills:', selectedSkills)
+      console.log('   Type:', Array.isArray(selectedSkills) ? 'array' : typeof selectedSkills)
 
-      const resumeInfo = this.extractResumeInfo(resumeData)
+      // Use selected skills, or default if none provided
+      const skillsToAnalyze = selectedSkills && selectedSkills.length > 0 ? selectedSkills : getDefaultSkills()
+      
+      console.log('🎯 Skills to analyze:')
+      console.log('   Count:', skillsToAnalyze.length)
+      console.log('   List:', skillsToAnalyze)
+
+      const resumeInfo = this.extractResumeInfo(resumeData, skillsToAnalyze)
       console.log('📄 Resume parsed:', Object.keys(resumeInfo))
+      console.log('   Found skills in resume:', resumeInfo.skills)
 
       let githubData = {}
       if (githubUsername) {
@@ -56,6 +67,7 @@ export class TrustEngine {
         explanation,
         rawAnalysis: aiAnalysis,
         timestamp: new Date().toISOString(),
+        selectedSkills: skillsToAnalyze,
       }
 
       return trustScore
@@ -65,25 +77,22 @@ export class TrustEngine {
     }
   }
 
-  extractResumeInfo(resumeData) {
+  extractResumeInfo(resumeData, skillKeywords = []) {
     return {
       fullText: resumeData,
-      skills: this.extractSkills(resumeData),
+      skills: this.extractSkills(resumeData, skillKeywords),
       projects: this.extractProjects(resumeData),
       experience: this.extractExperience(resumeData),
       education: this.extractEducation(resumeData),
     }
   }
 
-  extractSkills(text) {
-    const skillKeywords = [
-      'javascript', 'react', 'node', 'python', 'sql', 'mongodb',
-      'typescript', 'express', 'next', 'vue', 'angular', 'aws',
-      'docker', 'kubernetes', 'git', 'rest api', 'graphql', 'microservices',
-    ]
+  extractSkills(text, skillKeywords = []) {
+    // Use provided skills or default
+    const keywords = skillKeywords.length > 0 ? skillKeywords : getDefaultSkills()
     const skills = []
-    skillKeywords.forEach((skill) => {
-      if (text.toLowerCase().includes(skill)) {
+    keywords.forEach((skill) => {
+      if (text.toLowerCase().includes(skill.toLowerCase())) {
         skills.push(skill)
       }
     })

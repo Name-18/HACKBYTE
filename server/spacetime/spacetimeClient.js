@@ -133,6 +133,17 @@ class SpacetimeClient {
       breakdown: JSON.stringify(analysisResult.breakdown || {}),
     }
 
+    // Console log selected skills
+    if (analysisResult.selectedSkills?.length > 0) {
+      console.log('\n' + '='.repeat(60))
+      console.log('🎯 SELECTED SKILLS FOR ANALYSIS:')
+      console.log('='.repeat(60))
+      analysisResult.selectedSkills.forEach((skill, index) => {
+        console.log(`  ${index + 1}. ${skill}`)
+      })
+      console.log('='.repeat(60) + '\n')
+    }
+
     // Always cache locally first
     this.candidates.set(candidateId, candidate)
 

@@ -1,8 +1,11 @@
 // components/CandidateCard.jsx
 import { Badge } from './ui/Badge'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Phone } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export function CandidateCard({ candidate, onClick }) {
+  const navigate = useNavigate()
+  
   const getVerdictColor = (verdict) => {
     switch (verdict) {
       case 'Trusted':
@@ -24,6 +27,16 @@ const rawScore =
 
 const trustScore = Number(rawScore) || 0
 // console.log("FULL candidate object:", candidate)
+
+  const handleWorkExpAuth = () => {
+    // Store the candidate ID in session storage for Work Experience Auth
+    sessionStorage.setItem('analyzedResumeId', candidate.id)
+    sessionStorage.setItem('resumeAnalyzed', 'true')
+    console.log('WorkExperience Auth clicked for candidate ID:', candidate.id)
+    
+    // Navigate to Work Experience Auth page
+    navigate('/work-auth')
+  }
   return (
     <div
       onClick={onClick}
@@ -67,10 +80,23 @@ const trustScore = Number(rawScore) || 0
         {candidate.explanation}
       </div>
 
-      <button className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1">
-        View Details
-        <ExternalLink className="w-4 h-4" />
-      </button>
+      <div className="flex gap-2">
+        <button className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1">
+          View Details
+          <ExternalLink className="w-4 h-4" />
+        </button>
+        
+        <button 
+          onClick={(e) => {
+            e.stopPropagation() // Prevent card click
+            handleWorkExpAuth()
+          }}
+          className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1 bg-blue-50 px-3 py-2 rounded-lg hover:bg-blue-100 transition"
+        >
+          <Phone className="w-4 h-4" />
+          Work Experience Auth
+        </button>
+      </div>
     </div>
   )
 }

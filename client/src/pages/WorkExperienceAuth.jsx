@@ -21,6 +21,13 @@ export function WorkExperienceAuth() {
   // Status state
   const [status, setStatus] = useState(null)
   const [statusLoading, setStatusLoading] = useState(false)
+  
+  // Get analyzed resume ID from session storage
+  const analyzedResumeId = sessionStorage.getItem('analyzedResumeId')
+  
+  // Debug logging
+  console.log('WorkExperienceAuth - analyzedResumeId:', analyzedResumeId)
+  console.log('WorkExperienceAuth - sessionStorage resumeAnalyzed:', sessionStorage.getItem('resumeAnalyzed'))
 
   // Polling for status updates
   useEffect(() => {
@@ -54,6 +61,7 @@ export function WorkExperienceAuth() {
         pocEmail,
         candidateName,
         organizationName,
+        resumeId: analyzedResumeId, // Include analyzed resume ID
       })
 
       if (response.data.success) {
@@ -64,6 +72,24 @@ export function WorkExperienceAuth() {
           mailStatus: 'pending',
           finalStatus: 'pending',
         })
+
+        // Store work exp auth data with resume ID as foreign key
+        const workExpAuthData = {
+          id: response.data.data.recordId,
+          resumeId: analyzedResumeId, // Foreign key linking to resume
+          pocPhone,
+          pocEmail,
+          candidateName,
+          organizationName,
+          callStatus: 'pending',
+          mailStatus: 'pending',
+          finalStatus: 'pending',
+          createdAt: new Date().toISOString()
+        }
+
+        // Store in session storage or could be sent to backend
+        sessionStorage.setItem('workExpAuthData', JSON.stringify(workExpAuthData))
+        console.log('Work Exp Auth Data Stored:', workExpAuthData)
       }
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to start verification')
@@ -138,6 +164,13 @@ export function WorkExperienceAuth() {
           <p className="text-gray-600 mt-2">
             Verify candidate work experience through phone call and email
           </p>
+          {analyzedResumeId && (
+            <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded">
+              <p className="text-sm text-blue-700">
+                <strong>Resume ID:</strong> {analyzedResumeId}
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -153,7 +186,31 @@ export function WorkExperienceAuth() {
                 </div>
               )}
 
+              {!analyzedResumeId && (
+                <div className="bg-yellow-50 border border-yellow-300 text-yellow-700 px-4 py-3 rounded-lg">
+                  ⚠️ No resume ID found. Please select a candidate from the dashboard first.
+                </div>
+              )}
+
               <div className="grid md:grid-cols-2 gap-6">
+                {/* Resume ID - Non-editable */}
+                {analyzedResumeId && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Resume ID
+                    </label>
+                    <input
+                      type="text"
+                      value={analyzedResumeId}
+                      readOnly
+                      className="w-full px-4 py-2 bg-blue-50 border border-blue-300 rounded-lg text-blue-700 font-medium cursor-not-allowed"
+                      title="This resume ID is from the selected candidate"
+                    />
+                    <p className="text-xs text-blue-600 mt-1">
+                      This resume ID is from the selected candidate
+                    </p>
+                  </div>
+                )}
                 {/* POC Phone */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
@@ -217,7 +274,7 @@ export function WorkExperienceAuth() {
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !analyzedResumeId}
                 className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold py-3 px-4 rounded-lg transition flex items-center justify-center gap-2"
               >
                 {isLoading ? (

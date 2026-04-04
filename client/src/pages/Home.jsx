@@ -1,14 +1,16 @@
 // pages/Home.jsx
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { UploadResume } from '../components/UploadResume'
 import { TrustScoreCard } from '../components/TrustScoreCard'
 import { BreakdownBar } from '../components/BreakdownBar'
 import { FlagsPanel } from '../components/FlagsPanel'
 import { ExplanationPanel } from '../components/ExplanationPanel'
 import { trustAPI } from '../services/api'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Phone } from 'lucide-react'
 
 export function Home() {
+  const navigate = useNavigate()
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -36,12 +38,23 @@ export function Home() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
-          <h1 className="text-4xl font-bold text-gray-900">
-            🧠 TrustHire
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Real-Time AI Hiring Intelligence & Verification Platform
-          </p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold text-gray-900">
+                🧠 TrustHire
+              </h1>
+              <p className="text-gray-600 mt-2">
+                Real-Time AI Hiring Intelligence & Verification Platform
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/work-auth')}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
+            >
+              <Phone className="w-4 h-4" />
+              WorkExperience Auth
+            </button>
+          </div>
         </div>
       </div>
 

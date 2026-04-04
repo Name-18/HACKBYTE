@@ -1,6 +1,7 @@
 // workAuthController.js - WorkExperience Auth API Controller
 import workAuthModel from '../models/workAuthModel.js'
 import workAuthService from '../services/workAuthService.js'
+import { VerifiedWorkAuth } from '../models/verifiedWorkAuthModel.js'
 
 const logger = {
   info: (msg) => console.log(`📞 ${msg}`),
@@ -32,6 +33,7 @@ export const startVerification = async (req, res) => {
       pocEmail,
       candidateName,
       organizationName,
+      resumeId: req.body.resumeId || null,
     })
 
     // Step 1: Generate voice message
@@ -161,9 +163,27 @@ export const handleVerification = async (req, res) => {
       finalStatus: finalStatus,
     })
 
-    logger.info(
-      `✅ Verification ${finalStatus} for record: ${id}`
-    )
+    logger.info(`✅ Verification ${finalStatus} for record: ${id}`)
+
+    // If authenticated → persist to MongoDB
+    if (finalStatus === 'correct') {
+      try {
+        const freshRecord = await workAuthModel.getById(id)
+        await VerifiedWorkAuth.create({
+          workAuthRecordId: id,
+          resumeId: freshRecord?.resumeId || null,
+          candidateName: freshRecord?.candidateName || '',
+          organizationName: freshRecord?.organizationName || '',
+          pocPhone: freshRecord?.pocPhone || '',
+          pocEmail: freshRecord?.pocEmail || '',
+          verificationMethod: 'email',
+          finalStatus: 'correct',
+        })
+        logger.info(`✅ Verified record saved to MongoDB for record: ${id}`)
+      } catch (mongoErr) {
+        logger.error(`MongoDB save failed (non-critical): ${mongoErr.message}`)
+      }
+    }
 
     // Return HTML response
     res.send(`
@@ -211,5 +231,43 @@ export const getAllRecords = async (req, res) => {
       success: false,
       error: error.message,
     })
+  }
+}
+
+export const getVerifiedRecords = async (req, res) => {
+  try {
+    const records = await VerifiedWorkAuth.find().sort({ createdAt: -1 })
+    res.json({ success: true, data: records })
+  } catch (error) {
+    logger.error(`Get verified records error: ${error.message}`)
+    res.status(500).json({ success: false, error: error.message })
+  }
+}
+
+export const checkVerification = async (req, res) => {
+  try {
+    const { resumeId } = req.query
+    if (!resumeId) {
+      return res.status(400).json({ success: false, error: 'resumeId required' })
+    }
+
+    const record = await VerifiedWorkAuth.findOne({ resumeId }).sort({ createdAt: -1 })
+
+    if (!record) {
+      return res.json({ success: true, status: 'not_verified', record: null })
+    }
+
+    return res.json({
+      success: true,
+      status: record.finalStatus === 'correct' ? 'verified' : 'rejected',
+      record: {
+        candidateName: record.candidateName,
+        organizationName: record.organizationName,
+        verifiedAt: record.createdAt,
+      },
+    })
+  } catch (error) {
+    logger.error(`Check verification error: ${error.message}`)
+    res.status(500).json({ success: false, error: error.message })
   }
 }

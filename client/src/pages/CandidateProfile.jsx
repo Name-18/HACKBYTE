@@ -7,6 +7,7 @@ import { TrustScoreCard } from '../components/TrustScoreCard'
 import { BreakdownBar } from '../components/BreakdownBar'
 import { FlagsPanel } from '../components/FlagsPanel'
 import { ExplanationPanel } from '../components/ExplanationPanel'
+import { WorkAuthBadge } from '../components/WorkAuthBadge'
 import { Loader2, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -76,6 +77,10 @@ export function CandidateProfile() {
           <h1 className="text-3xl font-bold text-gray-900">
             Candidate Profile
           </h1>
+          {/* Work Experience Verification Badge */}
+          <div className="mt-3">
+            <WorkAuthBadge resumeId={candidate?.id} showDetail={true} />
+          </div>
         </div>
       </div>
 

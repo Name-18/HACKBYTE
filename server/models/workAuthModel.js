@@ -10,6 +10,7 @@ export const workAuthModel = {
     const id = `wa_${recordIdCounter++}`
     const record = {
       id,
+      resumeId: data.resumeId || null,
       pocPhone: data.pocPhone,
       pocEmail: data.pocEmail,
       candidateName: data.candidateName || 'Candidate',

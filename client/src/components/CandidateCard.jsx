@@ -2,6 +2,7 @@
 import { Badge } from './ui/Badge'
 import { ExternalLink, Phone } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { WorkAuthBadge } from './WorkAuthBadge'
 
 export function CandidateCard({ candidate, onClick }) {
   const navigate = useNavigate()
@@ -78,6 +79,11 @@ const trustScore = Number(rawScore) || 0
 
       <div className="text-sm text-gray-600 line-clamp-2 mb-3">
         {candidate.explanation}
+      </div>
+
+      {/* Work Experience Verification Status */}
+      <div className="mb-3">
+        <WorkAuthBadge resumeId={candidate.id} />
       </div>
 
       <div className="flex gap-2">

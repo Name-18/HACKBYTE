@@ -5,6 +5,7 @@ import 'dotenv/config'
 import trustRoutes from './routes/trustRoutes.js'
 import workAuthRoutes from './routes/workAuthRoutes.js'
 import { spacetimeClient } from './spacetime/spacetimeClient.js'
+import { connectMongo } from './database/mongoClient.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -41,6 +42,9 @@ app.use((err, req, res, next) => {
 
 // Initialize SpacetimeDB connection
 await spacetimeClient.connect()
+
+// Initialize MongoDB connection
+await connectMongo()
 
 // Start server
 app.listen(PORT, () => {

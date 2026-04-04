@@ -16,7 +16,7 @@ export function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
 
-  const handleAnalyze = async (resumeFile, githubUsername) => {
+  const handleAnalyze = async (resumeFile, githubUsername, selectedSkills) => {
     setIsLoading(true)
     setError(null)
 
@@ -24,6 +24,7 @@ export function Home() {
       const analysis = await trustAPI.uploadAndAnalyze(
         resumeFile,
         githubUsername,
+        selectedSkills,
       )
       setResult(analysis)
     } catch (err) {

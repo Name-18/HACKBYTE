@@ -4,6 +4,7 @@ import {
   analyzeCandidateProfile,
   getAllCandidates,
   getCandidateById,
+  getAvailableSkills,
 } from '../controllers/trustController.js'
 import {
   uploadResume,
@@ -19,6 +20,9 @@ router.post('/upload-resume', resumeUploadMiddleware, uploadResume)
 // GitHub endpoints
 router.get('/github', getGitHubData)
 router.get('/review-random-repo', reviewRandomRepositoryCode)
+
+// Skills endpoints
+router.get('/available-skills', getAvailableSkills)
 
 // Trust analysis endpoints
 router.post('/analyze', analyzeCandidateProfile)

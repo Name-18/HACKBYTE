@@ -1,10 +1,11 @@
 // trustController.js - Analyze candidates and generate TrustScore
 import { trustEngine } from '../services/trustEngine.js'
 import { spacetimeClient } from '../spacetime/spacetimeClient.js'
+import { AVAILABLE_SKILLS } from '../config/skillsConfig.js'
 
 export const analyzeCandidateProfile = async (req, res) => {
   try {
-    const { resumeText, githubUsername } = req.body
+    const { resumeText, githubUsername, selectedSkills } = req.body
 
     if (!resumeText) {
       return res
@@ -12,10 +13,16 @@ export const analyzeCandidateProfile = async (req, res) => {
         .json({ error: 'Resume text is required' })
     }
 
+    // Debug: Log received skills
+    console.log('📥 Received from frontend:')
+    console.log('   selectedSkills:', selectedSkills)
+    console.log('   selectedSkills length:', selectedSkills?.length)
+
     // Perform analysis
     const trustScore = await trustEngine.analyzeCandidateProfile(
       resumeText,
       githubUsername,
+      selectedSkills,
     )
 
     // Store result in SpacetimeDB
@@ -67,6 +74,20 @@ export const getCandidateById = async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching candidate:', error)
+    res.status(500).json({ error: error.message })
+  }
+}
+
+export const getAvailableSkills = (req, res) => {
+  try {
+    res.json({
+      success: true,
+      data: {
+        categories: AVAILABLE_SKILLS,
+      },
+    })
+  } catch (error) {
+    console.error('Error fetching available skills:', error)
     res.status(500).json({ error: error.message })
   }
 }

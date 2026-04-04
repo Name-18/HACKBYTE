@@ -15,27 +15,27 @@ class GeminiService {
   async analyzeCandidate(data) {
     try {
       const { resume, github } = data
-      
+
       console.log('\n📊 ===== CANDIDATE PROFILE ANALYSIS =====')
       console.log('\n📋 RESUME DATA EXTRACTED:')
       console.log(`   • Skills Found: ${resume.skills?.length || 0} - ${resume.skills?.join(', ') || 'None'}`)
       console.log(`   • Projects: ${resume.projects?.length || 0}`)
       console.log(`   • Experience: ${resume.experience ? resume.experience.substring(0, 100) + '...' : 'None'}`)
       console.log(`   • Education: ${resume.education ? resume.education.substring(0, 100) + '...' : 'None'}`)
-      
+
       console.log('\n🐙 GITHUB DATA EXTRACTED:')
       console.log(`   • Username: ${github.username || 'N/A'}`)
       console.log(`   • Public Repos: ${github.publicRepos || 0}`)
       console.log(`   • Followers: ${github.followers || 0}`)
       console.log(`   • Languages: ${github.languages?.length || 0} - ${github.languages?.join(', ') || 'None'}`)
       console.log(`   • Followers: ${github.followers || 0}`)
-      
+
       console.log('\n🔍 COMPARING PARAMETERS:')
       console.log('   ✓ Skills consistency (resume vs GitHub)')
       console.log('   ✓ Projects consistency (resume vs GitHub profile)')
       console.log('   ✓ Experience authenticity')
       console.log('   ✓ Overall profile coherence')
-      
+
       const prompt = this.generateAnalysisPrompt(resume, github)
 
       console.log('\n📤 Sending to Gemini for professional analysis...')
@@ -46,7 +46,7 @@ class GeminiService {
 
       console.log('📥 Analysis response received')
       const parsed = this.parseAnalysisResponse(response.text, resume, github)
-      
+
       console.log('\n📊 ===== ANALYSIS RESULTS =====')
       console.log(`   Skills Consistency: ${parsed.skillsConsistency}`)
       console.log(`   Projects Consistency: ${parsed.projectsConsistency}`)
@@ -246,7 +246,7 @@ RED FLAGS MUST BE SPECIFIC: Instead of generic flags, provide actual concerns li
       console.log(`\n📁 Repository: ${repoInfo.owner}/${repoInfo.name}`)
       console.log(`🔤 Language: ${repoInfo.language}`)
       console.log(`📝 Description: ${repoInfo.description}`)
-      
+
       console.log(`\n📄 Files to Analyze: ${codeFiles.length}`)
       codeFiles.forEach((file, idx) => {
         console.log(`   ${idx + 1}. ${file.path} (${file.language}) - ${file.content.length} characters`)
@@ -260,7 +260,7 @@ RED FLAGS MUST BE SPECIFIC: Instead of generic flags, provide actual concerns li
       console.log('   ✓ Best practices adherence')
       console.log('   ✓ Developer skill level')
 
-      const codePreview = codeFiles.map(file => 
+      const codePreview = codeFiles.map(file =>
         `FILE: ${file.path} (${file.language})\n\`\`\`${file.language.toLowerCase()}\n${file.content.substring(0, 500)}...\n\`\`\``
       ).join('\n\n')
 
@@ -274,14 +274,14 @@ RED FLAGS MUST BE SPECIFIC: Instead of generic flags, provide actual concerns li
 
       console.log('📥 Review response received')
       const parsed = this.parseCodeReviewResponse(response.text)
-      
+
       console.log('\n📋 ===== CODE REVIEW RESULTS =====')
       console.log(`Overall Quality: ${parsed.overallQuality?.toUpperCase()}`)
       console.log(`Readability: ${parsed.codeReadability}`)
       console.log(`Performance: ${parsed.performanceRating}`)
       console.log(`Skill Level: ${parsed.skillLevel}`)
       console.log(`Score: ${parsed.score}/100`)
-      
+
       if (parsed.securityConcerns?.length > 0) {
         console.log(`\n🔒 Security Issues Found:`)
         parsed.securityConcerns.forEach(concern => console.log(`   ⚠️  ${concern}`))
@@ -420,16 +420,16 @@ Return JSON with "redFlags" field highlighting critical issues:
       const jsonMatch = responseText.match(/\{[\s\S]*\}/)
       if (jsonMatch) {
         let parsed = JSON.parse(jsonMatch[0])
-        
+
         // Check for red flags and apply scoring penalties
         let scoreAdjustment = 0
         const redFlags = parsed.redFlags || []
-        
+
         if (redFlags.length > 0) {
           console.log('\n🚨 RED FLAGS DETECTED:')
           redFlags.forEach((flag, idx) => {
             console.log(`   ${idx + 1}. ${flag}`)
-            
+
             // Apply scoring penalties based on severity
             if (flag.includes('SQL injection') || flag.includes('hardcoded') || flag.includes('credentials') || flag.includes('XSS')) {
               scoreAdjustment -= 30
@@ -443,12 +443,12 @@ Return JSON with "redFlags" field highlighting critical issues:
               scoreAdjustment -= 10
             }
           })
-          
+
           const originalScore = parsed.score
           parsed.score = Math.max(0, parsed.score + scoreAdjustment)
           console.log(`   📉 Score Adjusted: ${originalScore} ${scoreAdjustment > 0 ? '+' : ''}${scoreAdjustment} = ${parsed.score}`)
         }
-        
+
         console.log('\n📊 DETAILED EVALUATION PARAMETERS:')
         console.log('   Quality Metrics:')
         console.log(`     • Overall Quality: ${parsed.overallQuality?.toUpperCase()}`)
@@ -462,12 +462,12 @@ Return JSON with "redFlags" field highlighting critical issues:
         console.log(`     • Security Concerns: ${parsed.securityConcerns?.length > 0 ? parsed.securityConcerns.join(', ') : 'None'}`)
         console.log(`     • Best Practices: ${parsed.bestPractices?.join(', ') || 'None'}`)
         console.log(`   Final Score: ${parsed.score}/100`)
-        
+
         // Ensure redFlags field exists in response
         if (!parsed.redFlags) {
           parsed.redFlags = []
         }
-        
+
         return parsed
       }
 

@@ -41,14 +41,20 @@ export class TrustEngine {
       })
       console.log('🧠 AI analysis complete')
 
-      // Analyze random repository from user's GitHub profile (if GitHub data exists)
-      let randomRepoAnalysis = null
-      if (githubData && githubData.repos && githubData.repos.length > 0) {
-        console.log('📦 Analyzing random GitHub repository from user profile...')
-        randomRepoAnalysis = await this.analyzeRandomRepository(githubData)
-      } else {
-        console.log('⏭️ Skipping repository analysis (no GitHub profile provided)')
-      }
+      // CODE FILE VALIDATOR — commented out for now
+      // let randomRepoAnalysis = null
+      // if (githubData && githubData.repos && githubData.repos.length > 0) {
+      //   console.log('📦 Analyzing random GitHub repository from user profile...')
+      //   try {
+      //     randomRepoAnalysis = await this.analyzeRandomRepository(githubData)
+      //   } catch (repoErr) {
+      //     console.warn('⚠️ Repo analysis skipped (Gemini rate limit or error):', repoErr.message)
+      //     randomRepoAnalysis = { status: 'skipped', message: 'Code review skipped to avoid API exhaustion.' }
+      //   }
+      // } else {
+      //   console.log('⏭️ Skipping repository analysis (no GitHub profile provided)')
+      // }
+      const randomRepoAnalysis = null
 
       const scores = this.calculateScores(
         resumeInfo,
@@ -106,15 +112,17 @@ export class TrustEngine {
       
       // Extract code from the selected repository
       console.log('📂 Extracting code from user repository...')
-      const codeFiles = await githubService.extractRepositoryCode(
+      const allFiles = await githubService.extractRepositoryCode(
         githubData.username,
         randomRepo.name
-      ).filter(file => file.content.length < 500)
-  .slice(0, 3)
-  .map(file => ({
-    ...file,
-    content: file.content.slice(0, 200)
-  }))
+      )
+      const codeFiles = allFiles
+        .filter(file => file.content && file.content.length < 500)
+        .slice(0, 3)
+        .map(file => ({
+          ...file,
+          content: file.content.slice(0, 200)
+        }))
 
       if (codeFiles.length === 0) {
         console.warn('⚠️ No code files extracted from repository')

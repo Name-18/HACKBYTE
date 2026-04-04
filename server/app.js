@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import 'dotenv/config'
 import trustRoutes from './routes/trustRoutes.js'
+import workAuthRoutes from './routes/workAuthRoutes.js'
 import { spacetimeClient } from './spacetime/spacetimeClient.js'
 
 const app = express()
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }))
 
 // Routes
 app.use('/api/trust', trustRoutes)
+app.use('/api/work-auth', workAuthRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

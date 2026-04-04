@@ -1,15 +1,13 @@
 // trustEngine.js - Core TrustScore calculation engine
 import { geminiService } from './geminiService.js'
 import { githubService } from './githubService.js'
-import { timelineChecker } from './timelineChecker.js'
 
 export class TrustEngine {
   constructor() {
     this.weights = {
       skills: 0.35,
       projects: 0.35,
-      experience: 0.20,
-      timeline: 0.10,
+      experience: 0.30,
     }
   }
 
@@ -32,17 +30,10 @@ export class TrustEngine {
       })
       console.log('🧠 AI analysis complete')
 
-      const timelineValidation = timelineChecker.validateTimeline(
-        resumeInfo,
-        githubData,
-      )
-      console.log('⏰ Timeline validation complete')
-
       const scores = this.calculateScores(
         resumeInfo,
         githubData,
         aiAnalysis,
-        timelineValidation,
       )
 
       const verdict = this.determineVerdict(scores, aiAnalysis)
@@ -50,7 +41,6 @@ export class TrustEngine {
       const explanation = this.generateExplanation(
         scores,
         aiAnalysis,
-        timelineValidation,
       )
 
       const trustScore = {
@@ -118,12 +108,11 @@ export class TrustEngine {
     return match ? match[1].trim() : ''
   }
 
-  calculateScores(resumeInfo, githubData, aiAnalysis, timelineValidation) {
+  calculateScores(resumeInfo, githubData, aiAnalysis) {
     const scores = {
       skills: this.calculateSkillsScore(resumeInfo, githubData, aiAnalysis),
       projects: this.calculateProjectsScore(resumeInfo, githubData, aiAnalysis),
       experience: this.calculateExperienceScore(resumeInfo, githubData, aiAnalysis),
-      timeline: timelineValidation.score || 0,
     }
 
     // FIX 1: weights are decimals (0.35 etc.), sub-scores are 0–100
@@ -131,75 +120,93 @@ export class TrustEngine {
     scores.overall = Math.round(
       scores.skills   * this.weights.skills   +
       scores.projects  * this.weights.projects  +
-      scores.experience * this.weights.experience +
-      scores.timeline  * this.weights.timeline
+      scores.experience * this.weights.experience
     )
 
     return scores
   }
 
   calculateSkillsScore(resumeInfo, githubData, aiAnalysis) {
-    let score = 70 // Base score
+    let score = 80 // Base score
 
-    if (githubData.languages) {
+    if (githubData.languages && githubData.languages.length > 0) {
       const verifiedSkills = resumeInfo.skills.filter((skill) =>
         githubData.languages.some((lang) =>
           lang.toLowerCase().includes(skill.toLowerCase()),
         ),
       )
-      score += verifiedSkills.length * 5
+      score += verifiedSkills.length * 3 // Bonus for verified skills
     }
 
+    // Apply consistency penalties
     if (aiAnalysis.skillsConsistency === 'low') {
-      score -= 30
+      score -= 10 // Penalty for low consistency
     } else if (aiAnalysis.skillsConsistency === 'medium') {
-      score -= 10
+      score -= 3 // Small penalty for medium consistency
     }
 
-    const unverifiedSkills =
-      resumeInfo.skills.length - (githubData.languages?.length || 0)
-    if (unverifiedSkills > resumeInfo.skills.length * 0.5) {
-      score -= 15
+    // Apply red flag penalties
+    if (aiAnalysis.suspicionFlags) {
+      const skillFlags = aiAnalysis.suspicionFlags.filter(flag => 
+        flag.toLowerCase().includes('skill') || 
+        flag.toLowerCase().includes('unverified') ||
+        flag.toLowerCase().includes('mismatch')
+      )
+      score -= skillFlags.length * 8 // -8 per skill-related flag
     }
 
     return Math.max(0, Math.min(100, score))
   }
 
   calculateProjectsScore(resumeInfo, githubData, aiAnalysis) {
-    let score = 60 // Base score
+    let score = 80 // Base score
 
-    if (githubData.publicRepos) {
-      score += Math.min(githubData.publicRepos * 3, 25)
+    if (githubData.publicRepos && githubData.publicRepos > 0) {
+      score += Math.min(githubData.publicRepos, 15) // Bonus for public repos
     }
 
-    if (githubData.stars && githubData.stars > 10) {
-      score += 20
-    }
-
+    // Apply consistency penalties
     if (aiAnalysis.projectsConsistency === 'low') {
-      score -= 35
+      score -= 10 // Penalty for low consistency
     } else if (aiAnalysis.projectsConsistency === 'medium') {
-      score -= 15
+      score -= 5 // Penalty for medium consistency
+    }
+
+    // Apply red flag penalties
+    if (aiAnalysis.suspicionFlags) {
+      const projectFlags = aiAnalysis.suspicionFlags.filter(flag => 
+        flag.toLowerCase().includes('project') || 
+        flag.toLowerCase().includes('repository') ||
+        flag.toLowerCase().includes('github evidence')
+      )
+      score -= projectFlags.length * 8 // -8 per project-related flag
     }
 
     return Math.max(0, Math.min(100, score))
   }
 
   calculateExperienceScore(resumeInfo, githubData, aiAnalysis) {
-    let score = 65 // Base score
+    let score = 80 // Base score
 
-    if (githubData.yearsSinceCreated && githubData.yearsSinceCreated > 3) {
-      score += 15
+    // Bonus if experience is mentioned in resume
+    if (resumeInfo.experience && resumeInfo.experience.length > 0) {
+      score += 10
     }
 
-    if (githubData.contributions > 100) {
-      score += 15
-    }
-
+    // Apply consistency penalties
     if (aiAnalysis.experienceConsistency === 'low') {
-      score -= 30
+      score -= 10 // Penalty for low consistency
     } else if (aiAnalysis.experienceConsistency === 'medium') {
-      score -= 12
+      score -= 5 // Penalty for medium consistency
+    }
+
+    // Apply red flag penalties
+    if (aiAnalysis.suspicionFlags) {
+      const experienceFlags = aiAnalysis.suspicionFlags.filter(flag => 
+        flag.toLowerCase().includes('experience') || 
+        flag.toLowerCase().includes('gap')
+      )
+      score -= experienceFlags.length * 8 // -8 per experience-related flag
     }
 
     return Math.max(0, Math.min(100, score))
@@ -207,23 +214,25 @@ export class TrustEngine {
 
   determineVerdict(scores, aiAnalysis) {
     const overallScore = scores.overall
+    const flagCount = (aiAnalysis.suspicionFlags || []).length
 
-    if (aiAnalysis.suspicionFlags && aiAnalysis.suspicionFlags.length > 3) {
-      return 'High Risk'
+    // Apply verdict based on flags and score
+    if (flagCount >= 3) {
+      return 'Needs Verification'
     }
 
-    if (overallScore >= 75 && aiAnalysis.skillsConsistency !== 'low') {
+    if (overallScore >= 70) {
       return 'Trusted'
     }
 
-    if (overallScore >= 50 && overallScore < 75) {
-      return 'Suspicious'
+    if (overallScore >= 50 && overallScore < 70) {
+      return 'Acceptable'
     }
 
-    return 'High Risk'
+    return 'Needs Review'
   }
 
-  generateExplanation(scores, aiAnalysis, timelineValidation) {
+  generateExplanation(scores, aiAnalysis) {
     let explanation = ''
 
     if (scores.skills >= 75) {
@@ -243,17 +252,11 @@ export class TrustEngine {
     }
 
     if (scores.experience >= 75) {
-      explanation += `✅ Experience timeline is consistent and verifiable. `
+      explanation += `✅ Experience is well-documented and verified. `
     } else if (scores.experience >= 50) {
       explanation += `⚠️ Some experience claims need verification. `
     } else {
       explanation += `❌ Experience shows potential red flags. `
-    }
-
-    if (timelineValidation.isValid) {
-      explanation += `✅ Timeline validation passed. `
-    } else {
-      explanation += `⚠️ Timeline shows potential gaps or overlaps. `
     }
 
     if (aiAnalysis.reasoning) {

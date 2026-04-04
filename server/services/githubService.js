@@ -52,12 +52,10 @@ class GitHubService {
         created_at: userData.created_at,
         updated_at: userData.updated_at,
         languages,
-        stars: repos.reduce((sum, repo) => sum + (repo.stargazers_count || 0), 0),
         repos: repos.map((repo) => ({
           name: repo.name,
           url: repo.html_url,
           description: repo.description,
-          stars: repo.stargazers_count,
           language: repo.language,
           created_at: repo.created_at,
           updated_at: repo.updated_at,
@@ -91,12 +89,192 @@ class GitHubService {
 
   async getContributions(username) {
     try {
-      // Note: This requires the user to be authenticated and have public contribution data
-      // For a more accurate count, you might need to use GraphQL API
-      // For now, we'll return 0 and could be enhanced
+      if (!this.token) {
+        console.warn('⚠️ GITHUB_TOKEN not configured, cannot fetch contributions')
+        return 0
+      }
+
+      // Use GraphQL API to get contribution statistics for the last year
+      const graphqlQuery = `
+        query {
+          user(login: "${username}") {
+            contributionsCollection {
+              contributionCalendar {
+                totalContributions
+              }
+            }
+          }
+        }
+      `
+
+      const response = await axios.post(
+        'https://api.github.com/graphql',
+        { query: graphqlQuery },
+        { headers: this.headers },
+      )
+
+      if (response.data?.data?.user?.contributionsCollection?.contributionCalendar) {
+        return response.data.data.user.contributionsCollection.contributionCalendar.totalContributions
+      }
+
       return 0
     } catch (error) {
+      console.warn('Failed to fetch contributions:', error.message)
       return 0
+    }
+  }
+
+  async getRandomRepository() {
+    try {
+      if (!this.token) {
+        console.warn('⚠️ GITHUB_TOKEN not configured, using mock data')
+        return this.getMockRandomRepository()
+      }
+
+      // Search for random repositories by using different search queries
+      const keywords = ['language:javascript', 'language:python', 'language:typescript', 'stars:>100', 'is:public']
+      const randomKeyword = keywords[Math.floor(Math.random() * keywords.length)]
+      const sortOptions = ['stars', 'forks', 'updated']
+      const randomSort = sortOptions[Math.floor(Math.random() * sortOptions.length)]
+
+      const searchResponse = await axios.get(
+        `${this.baseURL}/search/repositories`,
+        {
+          headers: this.headers,
+          params: {
+            q: randomKeyword,
+            sort: randomSort,
+            order: 'desc',
+            per_page: 100,
+          },
+        },
+      )
+
+      const repositories = searchResponse.data.items
+      if (repositories.length === 0) {
+        return this.getMockRandomRepository()
+      }
+
+      const randomRepo = repositories[Math.floor(Math.random() * repositories.length)]
+
+      return {
+        name: randomRepo.name,
+        owner: randomRepo.owner.login,
+        url: randomRepo.html_url,
+        description: randomRepo.description,
+        language: randomRepo.language,
+        cloneUrl: randomRepo.clone_url,
+      }
+    } catch (error) {
+      console.error('Error fetching random repo:', error.message)
+      return this.getMockRandomRepository()
+    }
+  }
+
+  async getRepositoryFiles(owner, repo, path = '') {
+    try {
+      if (!this.token) {
+        console.warn('⚠️ GITHUB_TOKEN not configured')
+        return []
+      }
+
+      const response = await axios.get(
+        `${this.baseURL}/repos/${owner}/${repo}/contents/${path}`,
+        { headers: this.headers },
+      )
+
+      let files = []
+      const items = Array.isArray(response.data) ? response.data : [response.data]
+
+      for (const item of items) {
+        if (item.type === 'file' && this.isCodeFile(item.name)) {
+          files.push({
+            name: item.name,
+            path: item.path,
+            size: item.size,
+            url: item.download_url,
+          })
+        } else if (item.type === 'dir' && files.length < 10) {
+          // Recursively get files from subdirectories (limit depth)
+          const subFiles = await this.getRepositoryFiles(owner, repo, item.path)
+          files = files.concat(subFiles)
+        }
+
+        if (files.length >= 15) break // Limit total files
+      }
+
+      return files.slice(0, 15)
+    } catch (error) {
+      console.error('Error fetching repo files:', error.message)
+      return []
+    }
+  }
+
+  async extractRepositoryCode(owner, repo) {
+    try {
+      const files = await this.getRepositoryFiles(owner, repo)
+
+      const codeFiles = []
+      for (const file of files) {
+        try {
+          const fileContent = await axios.get(file.url)
+          codeFiles.push({
+            name: file.name,
+            path: file.path,
+            content: fileContent.data,
+            language: this.detectLanguage(file.name),
+          })
+        } catch (error) {
+          console.warn(`Failed to fetch ${file.name}:`, error.message)
+        }
+      }
+
+      return codeFiles
+    } catch (error) {
+      console.error('Error extracting repo code:', error.message)
+      return []
+    }
+  }
+
+  isCodeFile(filename) {
+    const codeExtensions = [
+      '.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.cpp', '.c', '.go',
+      '.rb', '.php', '.cs', '.swift', '.kotlin', '.rs', '.vue'
+    ]
+    return codeExtensions.some(ext => filename.toLowerCase().endsWith(ext))
+  }
+
+  detectLanguage(filename) {
+    const ext = filename.split('.').pop().toLowerCase()
+    const languageMap = {
+      'js': 'JavaScript',
+      'jsx': 'JSX',
+      'ts': 'TypeScript',
+      'tsx': 'TSX',
+      'py': 'Python',
+      'java': 'Java',
+      'cpp': 'C++',
+      'c': 'C',
+      'go': 'Go',
+      'rb': 'Ruby',
+      'php': 'PHP',
+      'cs': 'C#',
+      'swift': 'Swift',
+      'kotlin': 'Kotlin',
+      'rs': 'Rust',
+      'vue': 'Vue',
+    }
+    return languageMap[ext] || 'Unknown'
+  }
+
+  getMockRandomRepository() {
+    return {
+      name: 'awesome-project',
+      owner: 'demo-user',
+      url: 'https://github.com/demo-user/awesome-project',
+      description: 'A sample project for code review',
+      language: 'JavaScript',
+      cloneUrl: 'https://github.com/demo-user/awesome-project.git',
     }
   }
 
@@ -113,13 +291,11 @@ class GitHubService {
       created_at: new Date(2015, 0, 1).toISOString(),
       updated_at: new Date().toISOString(),
       languages: ['JavaScript', 'Python', 'TypeScript', 'React'],
-      stars: 185,
       repos: [
         {
           name: 'awesome-project',
           url: `https://github.com/${username}/awesome-project`,
           description: 'An awesome project',
-          stars: 50,
           language: 'JavaScript',
           created_at: new Date(2020, 0, 1).toISOString(),
           updated_at: new Date().toISOString(),

@@ -9,7 +9,7 @@ import {
   uploadResume,
   resumeUploadMiddleware,
 } from '../controllers/resumeController.js'
-import { getGitHubData } from '../controllers/githubController.js'
+import { getGitHubData, reviewRandomRepositoryCode } from '../controllers/githubController.js'
 
 const router = express.Router()
 
@@ -18,6 +18,7 @@ router.post('/upload-resume', resumeUploadMiddleware, uploadResume)
 
 // GitHub endpoints
 router.get('/github', getGitHubData)
+router.get('/review-random-repo', reviewRandomRepositoryCode)
 
 // Trust analysis endpoints
 router.post('/analyze', analyzeCandidateProfile)

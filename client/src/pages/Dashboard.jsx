@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { trustAPI } from '../services/api'
 import { CandidateCard } from '../components/CandidateCard'
-import { Loader2, Plus } from 'lucide-react'
+import { Loader2, Plus, Phone } from 'lucide-react'
 
 export function Dashboard() {
   const [candidates, setCandidates] = useState([])
@@ -43,13 +43,22 @@ export function Dashboard() {
                 Real-time candidate analysis results
               </p>
             </div>
-            <button
-              onClick={() => navigate('/')}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate('/work-auth')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
+              >
+                <Phone className="w-4 h-4" />
+                WorkExperience Auth
+              </button>
+              <button
+                onClick={() => navigate('/')}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
               Analyze New Candidate
             </button>
+            </div>
           </div>
         </div>
       </div>

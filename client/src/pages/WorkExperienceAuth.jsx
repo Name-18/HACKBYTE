@@ -1,5 +1,6 @@
 // pages/WorkExperienceAuth.jsx - Work Experience Authentication Page
 import { useState, useEffect } from 'react'
+import { CommonNavbar } from '../components/CommonNavbar'
 import { Loader2, Phone, Mail, CheckCircle, XCircle, Clock } from 'lucide-react'
 import axios from 'axios'
 
@@ -155,7 +156,9 @@ export function WorkExperienceAuth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
+      <CommonNavbar />
+      
+      {/* Page Header with Resume ID */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <h1 className="text-4xl font-bold text-gray-900">

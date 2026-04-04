@@ -1,6 +1,7 @@
 // pages/CandidateProfile.jsx
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { CommonNavbar } from '../components/CommonNavbar'
 import { trustAPI } from '../services/api'
 import { TrustScoreCard } from '../components/TrustScoreCard'
 import { BreakdownBar } from '../components/BreakdownBar'
@@ -60,7 +61,9 @@ export function CandidateProfile() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
+      <CommonNavbar />
+      
+      {/* Page Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <button

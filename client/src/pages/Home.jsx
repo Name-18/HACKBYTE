@@ -1,17 +1,15 @@
 // pages/Home.jsx
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { CommonNavbar } from '../components/CommonNavbar'
 import { UploadResume } from '../components/UploadResume'
 import { TrustScoreCard } from '../components/TrustScoreCard'
 import { BreakdownBar } from '../components/BreakdownBar'
 import { FlagsPanel } from '../components/FlagsPanel'
 import { ExplanationPanel } from '../components/ExplanationPanel'
 import { trustAPI } from '../services/api'
-import { Loader2, Phone, Users } from 'lucide-react'
-import logo from '../assets/images.png' // ✅ added logo import
+import { Loader2 } from 'lucide-react'
 
 export function Home() {
-  const navigate = useNavigate()
   const [result, setResult] = useState(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -37,51 +35,7 @@ export function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-start">
-            <div>
-              {/* ✅ Updated Logo + Name */}
-              <div className="flex items-center gap-4">
-  {/* Logo */}
-  <img
-    src={logo}
-    alt="TrustHire Logo"
-    className="w-20 h-20 rounded-full object-contain"
-  />
-
-  {/* Text Block */}
-  <div className="flex flex-col justify-center h-20">
-    <h1 className="text-5xl font-bold text-gray-900 leading-tight">
-      TrustHire
-    </h1>
-    <p className="text-gray-600 text-sm leading-tight">
-      Real-Time AI Hiring Intelligence & Verification Platform
-    </p>
-  </div>
-</div>
-            </div>
-
-            <div className="flex gap-3 mt-5">
-              <button
-                onClick={() => navigate('/dashboard')}
-                className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
-              >
-                <Users className="w-4 h-4" />
-                All Candidates
-              </button>
-              <button
-                onClick={() => navigate('/work-auth')}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
-              >
-                <Phone className="w-4 h-4" />
-                WorkExperience Auth
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CommonNavbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">

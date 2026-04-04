@@ -1,9 +1,10 @@
 // pages/Dashboard.jsx
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { CommonNavbar } from '../components/CommonNavbar'
 import { trustAPI } from '../services/api'
 import { CandidateCard } from '../components/CandidateCard'
-import { Loader2, Plus, Phone, Users } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export function Dashboard() {
   const [candidates, setCandidates] = useState([])
@@ -31,37 +32,7 @@ export function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                📊 Dashboard
-              </h1>
-              <p className="text-gray-600 mt-2">
-                Real-time candidate analysis results
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => navigate('/')}
-                className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Analyze New Candidate
-              </button>
-              <button
-                onClick={() => navigate('/work-auth')}
-                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition flex items-center gap-2"
-              >
-                <Phone className="w-4 h-4" />
-                WorkExperience Auth
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <CommonNavbar />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-12">

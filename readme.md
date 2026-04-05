@@ -1,5 +1,8 @@
 # 🧠 TrustHire – Real-Time AI Hiring Intelligence Platform
 
+## 🎥 Demo
+[Watch Demo Video](https://drive.google.com/file/d/1Ctsqk3Pke7yuXVjPCofAOoxTkztWC45_/view?usp=sharing)
+
 A full-stack web application that verifies whether candidates are genuinely skilled by analyzing their resume and comparing it against real-world signals.
 
 ## 🎯 Core Features

@@ -36,26 +36,19 @@ export const startVerification = async (req, res) => {
       resumeId: req.body.resumeId || null,
     })
 
-    // Step 1: Generate voice message
-    const audioBuffer = await workAuthService.generateVoiceMessage(
-      pocEmail
+    // Step 1: Skip ElevenLabs voice generation (not working)
+    // Step 2: Send SMS directly with Twilio
+    let callResult = null
+    callResult = await workAuthService.makeVerificationCall(
+      pocPhone,
+      candidateName,
+      organizationName
     )
 
-    // Step 2: Make call (if audio generated)
-    let callResult = null
-    if (audioBuffer) {
-      // In production, would upload to storage and get permanent URL
-      // For now, using a placeholder
-      callResult = await workAuthService.makeVerificationCall(
-        pocPhone,
-        'https://example.com/audio/verification.mp3'
-      )
-
-      if (callResult.callSid) {
-        await workAuthModel.update(record.id, {
-          callStatus: 'pending',
-        })
-      }
+    if (callResult.callSid) {
+      await workAuthModel.update(record.id, {
+        callStatus: 'pending', // Keep as callStatus for compatibility
+      })
     }
 
     // Step 3: Send email
@@ -96,7 +89,7 @@ export const startVerification = async (req, res) => {
       data: {
         recordId: record.id,
         message:
-          'Verification initiated. Check phone for call and email inbox.',
+          'Verification initiated. Check phone for SMS and email inbox.',
         callStatus: callResult?.status || 'pending',
         emailStatus: emailResult?.status || 'pending',
       },

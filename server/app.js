@@ -4,6 +4,7 @@ import cors from 'cors'
 import 'dotenv/config'
 import trustRoutes from './routes/trustRoutes.js'
 import workAuthRoutes from './routes/workAuthRoutes.js'
+import twilioDemoRoutes from './routes/twilioDemoRoutes.js'
 import { spacetimeClient } from './spacetime/spacetimeClient.js'
 import { connectMongo } from './database/mongoClient.js'
 
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }))
 // Routes
 app.use('/api/trust', trustRoutes)
 app.use('/api/work-auth', workAuthRoutes)
+app.use('/api/twilio-demo', twilioDemoRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -18,6 +18,10 @@ const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY
 const EMAIL_USER = process.env.EMAIL_USER
 const EMAIL_PASS = process.env.EMAIL_PASS
 
+// Debug logging for SMS
+console.log('🔍 SMS Configuration Debug:')
+console.log('TWILIO_PHONE being used:', TWILIO_PHONE)
+
 // Initialize Twilio
 const twilioClient = TWILIO_SID
   ? twilio(TWILIO_SID, TWILIO_AUTH_TOKEN)
@@ -78,8 +82,8 @@ export const workAuthService = {
     }
   },
 
-  // ========== STEP 2: Make Call with Twilio ==========
-  makeVerificationCall: async (pocPhone, audioUrl) => {
+  // ========== STEP 2: Send SMS with Twilio (Skip ElevenLabs) ==========
+  makeVerificationCall: async (pocPhone, candidateName, organizationName) => {
     try {
       if (!twilioClient) {
         logger.error('Twilio not configured')
@@ -91,32 +95,26 @@ export const workAuthService = {
         return { status: 'failed', reason: 'TWILIO_PHONE not configured' }
       }
 
-      logger.info(`Making call to: ${pocPhone}`)
+      logger.info(`Sending verification SMS to: ${pocPhone}`)
 
-      // Create TwiML to play audio
-      const twiml = `<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Play>${audioUrl}</Play>
-    <Gather numDigits="1" timeout="10">
-        <Say>Press 1 to confirm. Press 2 to cancel.</Say>
-    </Gather>
-</Response>`
+      // Create SMS message
+      const smsMessage = `Hi, this is TrustHire. We are verifying the work experience of ${candidateName} at ${organizationName}. Please check your email for verification link. Thank you.`
 
-      const call = await twilioClient.calls.create({
+      const message = await twilioClient.messages.create({
+        body: smsMessage,
         from: TWILIO_PHONE,
         to: pocPhone,
-        twiml: twiml,
       })
 
-      logger.info(`✅ Call initiated: ${call.sid}`)
+      logger.info(`✅ Verification SMS sent: ${message.sid}`)
 
       return {
         status: 'pending',
-        callSid: call.sid,
-        message: 'Call initiated',
+        callSid: message.sid, // Keep as callSid for compatibility
+        message: 'Verification SMS sent',
       }
     } catch (error) {
-      logger.error(`Call failed: ${error.message}`)
+      logger.error(`SMS failed: ${error.message}`)
       return { status: 'failed', reason: error.message }
     }
   },

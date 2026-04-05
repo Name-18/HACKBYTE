@@ -11,9 +11,10 @@
 │  • Home              • UploadResume                             │
 │  • Dashboard         • TrustScoreCard                           │
 │  • CandidateProfile  • BreakdownBar                             │
-│                      • FlagsPanel                               │
+│  • WorkExpAuth       • FlagsPanel                               │
 │                      • ExplanationPanel                         │
 │                      • CandidateCard                            │
+│                      • WorkAuthStatus                           │
 └──────────────┬──────────────────────────────────────────────────┘
                │ HTTP/REST API
                │ (Axios)
@@ -27,13 +28,16 @@
 │ Controllers:                                                    │
 │ ├─ resumeController.js    (File parsing)                       │
 │ ├─ githubController.js    (GitHub API)                         │
-│ └─ trustController.js     (Analysis + Storage)                 │
+│ ├─ trustController.js     (Analysis + Storage)                 │
+│ └─ workAuthController.js  (Work exp verif logic)               │
 │                                                                 │
 │ Services:                                                       │
 │ ├─ trustEngine.js         (Core scoring logic)                 │
 │ ├─ geminiService.js       (AI analysis)                        │
 │ ├─ githubService.js       (GitHub API client)                  │
+│ ├─ codeforcesService.js   (Codeforces API)                     │
 │ ├─ parserService.js       (Resume parsing)                     │
+│ ├─ workAuthService.js     (Background check)                   │
 │ └─ timelineChecker.js     (Timeline validation)                │
 │                                                                 │
 │ Real-Time:                                                      │
@@ -80,6 +84,7 @@ trustController.analyzeCandidateProfile()
 trustEngine.analyzeCandidateProfile()
     ├─ extractResumeInfo()
     ├─ githubService.fetchUserData() → GitHub API
+    ├─ codeforcesService.fetchRankings() → CF API
     ├─ geminiService.analyzeCandidate() → Gemini AI
     ├─ timelineChecker.validateTimeline()
     ├─ calculateScores()

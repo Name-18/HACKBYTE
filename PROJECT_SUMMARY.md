@@ -19,12 +19,12 @@
 - Contact information extraction
 - Skill, experience, and education parsing
 
-#### 2. **GitHub Integration**
+#### 2. **GitHub & Codeforces Integration**
 - Real-time GitHub profile data fetching
-- Repository analysis
-- Language detection
-- Contribution tracking
-- Account age calculation
+- Repository code review (AI powered)
+- Language detection and activity metrics
+- Codeforces official handle verification
+- Competitive programming rank cross-checking
 
 #### 3. **TrustScore Engine** (Core System)
 - Multi-dimensional scoring algorithm
@@ -55,9 +55,15 @@
 
 #### 7. **Real-Time Sync**
 - SpacetimeDB integration for persistent storage
-- Candidate data storage
+- MongoDB integration for Work Authorization tracking
 - Dashboard real-time updates
 - Multi-user synchronization ready
+
+#### 8. **Work Experience Authorization (New)**
+- Automated background checks generated via email
+- Magic link approval/denial for employers
+- Admin dashboard to track verification status
+- Seamless integration with resume parsing pipeline
 
 #### 8. **Beautiful Frontend UI**
 - 3 main pages (Home, Dashboard, Profile)
@@ -70,12 +76,12 @@
 
 ### ✅ Backend Services
 
-| Service | Purpose | Status |
-|---------|---------|--------|
 | **trustEngine.js** | Core scoring logic | ✅ Complete |
 | **geminiService.js** | AI analysis integration | ✅ Complete |
 | **githubService.js** | GitHub API client | ✅ Complete |
+| **codeforcesService.js** | Codeforces verification | ✅ Complete |
 | **parserService.js** | Resume file parsing | ✅ Complete |
+| **workAuthService.js**| Work Experience Background Check | ✅ Complete |
 | **timelineChecker.js** | Timeline validation | ✅ Complete |
 | **spacetimeClient.js** | Real-time DB integration | ✅ Complete |
 
@@ -89,6 +95,7 @@
 | **FlagsPanel** | Red flags display | ✅ Complete |
 | **ExplanationPanel** | AI reasoning | ✅ Complete |
 | **CandidateCard** | Dashboard cards | ✅ Complete |
+| **WorkExperienceAuth**| Work Validation Page | ✅ Complete |
 | **App** | Router & layout | ✅ Complete |
 
 ### ✅ Pages
@@ -98,14 +105,16 @@
 | **Home (/)** | Upload & analyze | ✅ Complete |
 | **Dashboard** | View all results | ✅ Complete |
 | **Profile** | Individual analysis | ✅ Complete |
+| **Work Auth** | Employer verification portal | ✅ Complete |
 
 ### ✅ API Endpoints
 
 - `POST /api/trust/upload-resume` - Parse resume
 - `POST /api/trust/analyze` - Run analysis
 - `GET /api/trust/github` - Fetch GitHub data
+- `GET /api/trust/review-random-repo` - Repo code review
 - `GET /api/trust/candidates` - List all analyses
-- `GET /api/trust/candidates/:id` - View single analysis
+- `POST /api/work-auth/start` - Initiate background check
 - `GET /api/health` - Health check
 
 ### ✅ Documentation Provided

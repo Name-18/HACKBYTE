@@ -74,7 +74,9 @@ Run comprehensive TrustScore analysis on a candidate.
 ```json
 {
   "resumeText": "Full resume text string",
-  "githubUsername": "octocat"  // Optional
+  "githubUsername": "octocat",       // Optional
+  "codeforcesHandle": "tourist",     // Optional (New)
+  "skillsToAnalyze": ["React", "Node.js"] // Optional (New)
 }
 ```
 
@@ -130,28 +132,7 @@ Fetch GitHub profile data for a user.
   "data": {
     "username": "octocat",
     "name": "The Octocat",
-    "bio": "Github's mascot",
-    "location": "San Francisco",
-    "publicRepos": 42,
-    "followers": 5000,
-    "following": 123,
-    "created_at": "2011-01-25T18:44:36Z",
-    "updated_at": "2024-04-03T10:00:00Z",
-    "languages": ["JavaScript", "Python", "Ruby"],
-    "stars": 500,
-    "repos": [
-      {
-        "name": "Hello-World",
-        "url": "https://github.com/octocat/Hello-World",
-        "description": "My first repository",
-        "stars": 80,
-        "language": "JavaScript",
-        "created_at": "2011-01-26T19:01:12Z",
-        "updated_at": "2024-03-15T08:32:12Z"
-      }
-    ],
-    "yearsSinceCreated": 13,
-    "contributions": 1500
+    ...
   }
 }
 ```
@@ -159,6 +140,33 @@ Fetch GitHub profile data for a user.
 **Errors:**
 - 400: GitHub username is required
 - 500: GitHub API error (returns mock data as backup)
+
+---
+
+### 3.1 Get Random GitHub Repo Review (New)
+
+**GET** `/trust/review-random-repo?username=octocat`
+
+Fetches a random repository from the candidate and generates an AI code review to verify coding standard.
+
+**Query Parameters:**
+- `username` (required): GitHub username
+
+---
+
+### 3.2 Get Available Skills (New)
+
+**GET** `/trust/available-skills`
+
+Retrieve a predefined list of skills that the platform currently analyzes.
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "data": ["React", "Node.js", "Python", "Docker"]
+}
+```
 
 ---
 
@@ -240,6 +248,19 @@ Server and service status.
   "spacetimeConnected": true
 }
 ```
+
+---
+
+### 7. Work Experience Authorization (New)
+
+The application provides automated background checks via employer email links. Base path: `/api/work-auth`
+
+- **POST** `/start` - Start verification flow (Body: { email, candidateName, companyName, role, duration })
+- **GET** `/status?token=...` - Get verification status
+- **GET** `/verify?token=...&action=...` - Handle email verification link logic (Approved/Declined)
+- **GET** `/records` - Get all in-memory verification records
+- **GET** `/verified` - Get all authenticated records from database
+- **GET** `/check-verification?resumeId=xxx` - Check candidate's verification status
 
 ---
 
